@@ -1,0 +1,35 @@
+{
+	"agcgw":{
+		"backurl":"connect-dre.dbankcloud.cn",
+		"url":"connect-dre.hispace.hicloud.com"
+	},
+	"client":{
+		"appType":"1",
+		"cp_id":"5190090000027996843",
+		"product_id":"736430079244709422",
+		"client_id":"499909026054669504",
+		"client_secret":"D27CC714F553FD37E042B0D227AA53043A0D67B9E787610DB06D146A1D6D24C6",
+		"project_id":"736430079244709422",
+		"app_id":"103633039",
+		"api_key":"CgB6e3x9Tm5Dt2T27gpQs1dUJCO53q9DKs54y8ezdXt1j/E2UxAAef2j/qrGcqh9CGsHL62Dv1wAwbjt4W/UqCCS",
+		"package_name":"com.niskender.newswithhmssearchkit"
+	},
+	"service":{
+		"analytics":{
+			"collector_url":"datacollector-dre.dt.hicloud.com,datacollector-dre.dt.dbankcloud.cn",
+			"resource_id":"p1",
+			"channel_id":""
+		},
+		"search":{
+			"url":"https://search-dre.cloud.huawei.com"
+		},
+		"cloudstorage":{
+			"storage_url":"https://ops-dre.agcstorage.link"
+		},
+		"ml":{
+			"mlservice_url":"ml-api-dre.ai.dbankcloud.com,ml-api-dre.ai.dbankcloud.cn"
+		}
+	},
+	"region":"DE",
+	"configuration_version":"1.0"
+}
