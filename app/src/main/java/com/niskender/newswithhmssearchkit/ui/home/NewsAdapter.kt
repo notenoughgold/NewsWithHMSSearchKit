@@ -1,4 +1,4 @@
-package com.niskender.newswithhmssearchkit
+package com.niskender.newswithhmssearchkit.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

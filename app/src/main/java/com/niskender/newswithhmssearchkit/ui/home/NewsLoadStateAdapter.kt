@@ -1,4 +1,4 @@
-package com.niskender.newswithhmssearchkit
+package com.niskender.newswithhmssearchkit.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,6 +6,7 @@ import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.niskender.newswithhmssearchkit.R
 import com.niskender.newswithhmssearchkit.databinding.LayoutNetworkStateItemBinding
 
 class NewsLoadStateAdapter(private val adapter: NewsAdapter)  :

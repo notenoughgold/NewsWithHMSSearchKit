@@ -2,11 +2,13 @@ package com.niskender.newswithhmssearchkit.data
 
 import android.util.Log
 import com.huawei.hms.searchkit.SearchKitInstance
+import com.huawei.hms.searchkit.bean.AutoSuggestResponse
 import com.huawei.hms.searchkit.bean.CommonSearchRequest
 import com.huawei.hms.searchkit.utils.Language
 import com.huawei.hms.searchkit.utils.Region
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
 
 class NewsRepository(
     private val tokenRequestService: TokenRequestService
@@ -48,6 +50,10 @@ class NewsRepository(
 
         return@withContext newsState
 
+    }
+
+    suspend fun getAutoSuggestions(str: String): AutoSuggestResponse = withContext(Dispatchers.IO) {
+        SearchKitInstance.instance.searchHelper.suggest(str, Language.ENGLISH)
     }
 
     companion object {
