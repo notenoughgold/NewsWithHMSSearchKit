@@ -19,7 +19,6 @@ import androidx.paging.PagingData
 import com.huawei.hms.searchkit.bean.NewsItem
 import com.niskender.newswithhmssearchkit.R
 import com.niskender.newswithhmssearchkit.databinding.FragmentHomeBinding
-import com.niskender.newswithhmssearchkit.ui.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -56,7 +55,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                         listAdapter.submitData(value)
                     }
                 }
-
             }
 
 
@@ -65,7 +63,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             listAdapter.withLoadStateFooter(NewsLoadStateAdapter(listAdapter))
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            Log.d(MainActivity.TAG, "SwipeRefreshLayout onRefresh")
+            Log.d(TAG, "SwipeRefreshLayout onRefresh")
             listAdapter.refresh()
         }
 
