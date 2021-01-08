@@ -2,8 +2,8 @@ package com.niskender.newswithhmssearchkit.data
 
 import android.util.Log
 import com.huawei.hms.searchkit.SearchKitInstance
-import com.huawei.hms.searchkit.bean.AutoSuggestResponse
 import com.huawei.hms.searchkit.bean.CommonSearchRequest
+import com.huawei.hms.searchkit.bean.SpellCheckResponse
 import com.huawei.hms.searchkit.utils.Language
 import com.huawei.hms.searchkit.utils.Region
 import kotlinx.coroutines.Dispatchers
@@ -52,8 +52,37 @@ class NewsRepository(
 
     }
 
-    suspend fun getAutoSuggestions(str: String): AutoSuggestResponse = withContext(Dispatchers.IO) {
-        SearchKitInstance.instance.searchHelper.suggest(str, Language.ENGLISH)
+    suspend fun getAutoSuggestions(str: String): AutoSuggestionsState =
+        withContext(Dispatchers.IO) {
+            val autoSuggestionsState: AutoSuggestionsState
+            autoSuggestionsState = try {
+                val result = SearchKitInstance.instance.searchHelper.suggest(str, Language.ENGLISH)
+                if (result != null) {
+                    AutoSuggestionsState.Success(result.suggestions)
+                } else {
+                    AutoSuggestionsState.Failure(Exception("fetch suggestions error"))
+                }
+            } catch (e: Exception) {
+                AutoSuggestionsState.Failure(e)
+            }
+            return@withContext autoSuggestionsState
+        }
+
+    suspend fun getSpellCheck(str: String): SpellCheckState = withContext(Dispatchers.IO) {
+        val spellCheckState: SpellCheckState
+        spellCheckState = try {
+            val result = SearchKitInstance.instance.searchHelper.spellCheck(str, Language.ENGLISH)
+            if (result != null) {
+                SpellCheckState.Success(result)
+            } else {
+                SpellCheckState.Failure(Exception("fetch spellcheck error"))
+            }
+        } catch (
+            e: Exception
+        ) {
+            SpellCheckState.Failure(e)
+        }
+        return@withContext spellCheckState
     }
 
     companion object {
