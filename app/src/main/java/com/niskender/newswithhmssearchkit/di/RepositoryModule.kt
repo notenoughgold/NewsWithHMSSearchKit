@@ -32,16 +32,14 @@ class RepositoryModule {
 
     @Provides
     @Singleton
-    fun providesRetrofitClientForTokenRequest(): TokenRequestService {
+    fun providesRetrofitClientForTokenRequest(okHttpClient: OkHttpClient): TokenRequestService {
         val baseUrl = "https://oauth-login.cloud.huawei.com/"
-
-        val client = OkHttpClient.Builder().build()
 
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .addCallAdapterFactory(CoroutineCallAdapterFactory())
             .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
+            .client(okHttpClient)
             .build()
             .create(TokenRequestService::class.java)
     }
