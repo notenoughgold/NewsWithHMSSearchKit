@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -38,41 +39,43 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         _binding = FragmentHomeBinding.bind(view)
 
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
-        binding.toolbar.title = "Home"
         setHasOptionsMenu(true)
-
-        val navController = findNavController()
-        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<String>("query")
-            ?.observe(
-                viewLifecycleOwner
-            ) {
-                lifecycleScope.launchWhenResumed {
-                    if (it.isNotEmpty()) {
-                        binding.swipeRefreshLayout.isRefreshing = true
-                    }
-                    binding.tv.visibility = View.GONE
-                    viewModel.searchNews(it)?.collectLatest { value: PagingData<NewsItem> ->
-                        listAdapter.submitData(value)
-                    }
-                }
-            }
-
 
         listAdapter = NewsAdapter(NewsAdapter.NewsComparator, onItemClicked)
         binding.rv.adapter =
             listAdapter.withLoadStateFooter(NewsLoadStateAdapter(listAdapter))
 
+        //if user swipe down to refresh, refresh paging adapter
         binding.swipeRefreshLayout.setOnRefreshListener {
-            Log.d(TAG, "SwipeRefreshLayout onRefresh")
             listAdapter.refresh()
         }
 
+        // Listen to search term returned from Search Fragment
+        setFragmentResultListener("requestKey") { _, bundle ->
+            // We use a String here, but any type that can be put in a Bundle is supported
+            val result = bundle.getString("bundleKey")
+            binding.tv.visibility = View.GONE
+            if (result != null) {
+                binding.toolbar.subtitle = "News about $result"
+                lifecycleScope.launchWhenResumed {
+                    binding.swipeRefreshLayout.isRefreshing = true
+                    viewModel.searchNews(result).collectLatest { value: PagingData<NewsItem> ->
+                        listAdapter.submitData(value)
+                    }
+                }
+            }
+        }
+
+        //need to listen to paging adapter load state to stop swipe to refresh layout animation
+        //if load state contain error, show a toast.
         listAdapter.addLoadStateListener {
             if (it.refresh is LoadState.NotLoading && startedLoading) {
                 binding.swipeRefreshLayout.isRefreshing = false
             } else if (it.refresh is LoadState.Error && startedLoading) {
                 binding.swipeRefreshLayout.isRefreshing = false
-                Toast.makeText(requireContext(), "An error occurred", Toast.LENGTH_SHORT).show()
+                val loadState = it.refresh as LoadState.Error
+                val errorMsg = loadState.error.localizedMessage
+                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show()
             } else if (it.refresh is LoadState.Loading) {
                 startedLoading = true
             }
@@ -89,6 +92,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
         return when (item.itemId) {
             R.id.searchItem -> {
+                //launch search fragment when search item clicked
                 findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
                 true
             }
@@ -97,6 +101,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
+    //callback function to be passed to paging adapter, used to launch news links.
     private val onItemClicked = { it: NewsItem ->
         val builder = CustomTabsIntent.Builder()
         val customTabsIntent = builder.build()

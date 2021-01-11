@@ -15,25 +15,19 @@ import kotlinx.coroutines.flow.Flow
 class HomeViewModel @ViewModelInject constructor(private val repository: NewsRepository) :
     ViewModel() {
 
-    var lastSearchQuery: String = ""
+    private var lastSearchQuery: String? = null
     var lastFlow: Flow<PagingData<NewsItem>>? = null
 
-    fun searchNews(query: String): Flow<PagingData<NewsItem>>? {
+    fun searchNews(query: String): Flow<PagingData<NewsItem>> {
 
-        return when {
-            query.isEmpty() -> {
-                lastFlow
-            }
-            query != lastSearchQuery -> {
-                lastSearchQuery = query
-                lastFlow = Pager(PagingConfig(pageSize = 10)) {
-                    NewsPagingDataSource(repository, query)
-                }.flow.cachedIn(viewModelScope)
-                lastFlow
-            }
-            else -> {
-                lastFlow
-            }
+        return if (query != lastSearchQuery) {
+            lastSearchQuery = query
+            lastFlow = Pager(PagingConfig(pageSize = 10)) {
+                NewsPagingDataSource(repository, query)
+            }.flow.cachedIn(viewModelScope)
+            lastFlow as Flow<PagingData<NewsItem>>
+        } else {
+            lastFlow!!
         }
     }
 

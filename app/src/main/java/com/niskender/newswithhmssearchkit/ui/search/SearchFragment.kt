@@ -1,19 +1,19 @@
 package com.niskender.newswithhmssearchkit.ui.search
 
-import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.chip.Chip
 import com.niskender.newswithhmssearchkit.R
@@ -26,7 +26,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.lang.Exception
 
 @AndroidEntryPoint
 class SearchFragment : Fragment(R.layout.fragment_search) {
@@ -36,9 +35,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private val viewModel: SearchViewModel by viewModels()
 
-    private lateinit var imm: InputMethodManager
-    private var searchView: SearchView? = null
-
     @FlowPreview
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -47,8 +43,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         setHasOptionsMenu(true)
 
-        imm = requireContext().getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-
+        //listen to the change in query text, trigger getSuggestions function after debouncing and filtering
         lifecycleScope.launch {
             viewModel.searchQuery.debounce(500).filter { s: String ->
                 return@filter s.length > 3
@@ -61,18 +56,16 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     val list = it.data
                     Log.d(TAG, "${list.size} suggestion")
                     binding.chipGroup.removeAllViews()
+                    //create a chip for each suggestion and add them to chip group
                     list.forEach { suggestion ->
                         val chip = Chip(requireContext())
                         chip.text = suggestion.name
                         chip.isClickable = true
-                        chip.setOnClickListener { thisChip ->
-                            imm.hideSoftInputFromWindow(
-                                thisChip.windowToken,
-                                InputMethodManager.HIDE_NOT_ALWAYS
-                            )
-                            findNavController().previousBackStackEntry?.savedStateHandle?.set(
-                                "query",
-                                suggestion.name
+                        chip.setOnClickListener {
+                            //set fragment result to return search term to home fragment.
+                            setFragmentResult(
+                                "requestKey",
+                                bundleOf("bundleKey" to suggestion.name)
                             )
                             findNavController().popBackStack()
                         }
@@ -85,6 +78,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             }
         }
 
+        //listen to the change in query text, trigger spellcheck function after debouncing and filtering
         lifecycleScope.launch {
             viewModel.searchQuery.debounce(500).filter { s: String ->
                 return@filter s.length > 3
@@ -103,9 +97,18 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         "corrected query $correctedStr confidence level $confidence"
                     )
                     if (confidence > 0) {
+                        //show spellcheck layout, and set on click listener to send corrected term to home fragment
+                        //to be searched
                         binding.tvDidYouMeanToSearch.visibility = View.VISIBLE
                         binding.tvCorrected.visibility = View.VISIBLE
                         binding.tvCorrected.text = correctedStr
+                        binding.llSpellcheck.setOnClickListener {
+                            setFragmentResult(
+                                "requestKey",
+                                bundleOf("bundleKey" to correctedStr)
+                            )
+                            findNavController().popBackStack()
+                        }
                     } else {
                         binding.tvDidYouMeanToSearch.visibility = View.GONE
                         binding.tvCorrected.visibility = View.GONE
@@ -123,8 +126,8 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.menu_search, menu)
         val searchMenuItem = menu.findItem(R.id.searchItem)
-        searchView = searchMenuItem.actionView as SearchView
-        searchView?.setIconifiedByDefault(false)
+        val searchView = searchMenuItem.actionView as SearchView
+        searchView.setIconifiedByDefault(false)
         searchMenuItem.expandActionView()
         searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
@@ -132,21 +135,21 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                findNavController().previousBackStackEntry?.savedStateHandle?.set("query", "")
                 findNavController().popBackStack()
                 return true
             }
         })
-        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-
-                imm.hideSoftInputFromWindow(
-                    searchView?.windowToken,
-                    InputMethodManager.HIDE_NOT_ALWAYS
-                )
-                findNavController().previousBackStackEntry?.savedStateHandle?.set("query", query)
-                findNavController().popBackStack()
-                return true
+                return if (query != null && query.length > 3) {
+                    setFragmentResult("requestKey", bundleOf("bundleKey" to query))
+                    findNavController().popBackStack()
+                    true
+                } else {
+                    Toast.makeText(requireContext(), "Search term is too short", Toast.LENGTH_SHORT)
+                        .show()
+                    true
+                }
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
