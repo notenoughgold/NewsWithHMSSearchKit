@@ -1,17 +1,16 @@
 {
 	"agcgw":{
+		"websocketbackurl":"connect-ws-dre.hispace.dbankcloud.cn",
 		"backurl":"connect-dre.dbankcloud.cn",
+		"websocketurl":"connect-ws-dre.hispace.dbankcloud.com",
 		"url":"connect-dre.hispace.hicloud.com"
 	},
 	"client":{
 		"appType":"1",
 		"cp_id":"5190090000027996843",
 		"product_id":"736430079244709422",
-		"client_id":"499909026054669504",
-		"client_secret":"D27CC714F553FD37E042B0D227AA53043A0D67B9E787610DB06D146A1D6D24C6",
 		"project_id":"736430079244709422",
 		"app_id":"103633039",
-		"api_key":"CgB6e3x9Tm5Dt2T27gpQs1dUJCO53q9DKs54y8ezdXt1j/E2UxAAef2j/qrGcqh9CGsHL62Dv1wAwbjt4W/UqCCS",
 		"package_name":"com.niskender.newswithhmssearchkit"
 	},
 	"service":{
